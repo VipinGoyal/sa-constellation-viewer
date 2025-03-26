@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { format } from "date-fns"
-import { CalendarIcon, Clock, MapPin, Search, Globe, Loader2, AlertCircle } from "lucide-react"
-import type { Location } from "@/lib/types"
-import { useDebounce } from "@/hooks/use-debounce"
-import { toast } from "sonner"
-import { popularCities } from "@/lib/city-data"
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { CalendarIcon, Clock, MapPin, Search, Globe, Loader2, AlertCircle } from "lucide-react";
+import type { Location } from "@/lib/types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { toast } from "sonner";
+import { popularCities } from "@/lib/city-data";
 
 interface SettingsModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  location: Location
-  dateTime: Date
-  onLocationChange: (location: Location) => void
-  onDateTimeChange: (date: Date) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  location: Location;
+  dateTime: Date;
+  onLocationChange: (location: Location) => void;
+  onDateTimeChange: (date: Date) => void;
 }
 
 export default function SettingsModal({
@@ -31,161 +31,161 @@ export default function SettingsModal({
   onLocationChange,
   onDateTimeChange,
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<string>("location")
-  const [previousLocation, setPreviousLocation] = useState<Location>(location)
-  const [previousDateTime, setPreviousDateTime] = useState<Date>(dateTime)
-  const calendarRef = useRef<HTMLDivElement>(null)
-  const calendarButtonRef = useRef<HTMLButtonElement>(null)
+  const [activeTab, setActiveTab] = useState<string>("location");
+  const [previousLocation, setPreviousLocation] = useState<Location>(location);
+  const [previousDateTime, setPreviousDateTime] = useState<Date>(dateTime);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const calendarButtonRef = useRef<HTMLButtonElement>(null);
 
   // Location state
-  const [searchQuery, setSearchQuery] = useState("")
-  const debouncedSearchQuery = useDebounce(searchQuery, 300)
-  const [searchResults, setSearchResults] = useState<Location[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [searchResults, setSearchResults] = useState<Location[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [manualLocation, setManualLocation] = useState({
     latitude: location.latitude.toString(),
     longitude: location.longitude.toString(),
     name: location.name,
-  })
+  });
   const [locationError, setLocationError] = useState<{
-    latitude?: string
-    longitude?: string
-  } | null>(null)
-  const [showPopularCities, setShowPopularCities] = useState(true)
-  const [locationChanged, setLocationChanged] = useState(false)
+    latitude?: string;
+    longitude?: string;
+  } | null>(null);
+  const [showPopularCities, setShowPopularCities] = useState(true);
+  const [locationChanged, setLocationChanged] = useState(false);
 
   // Date/Time state
-  const [workingDate, setWorkingDate] = useState<Date>(new Date(dateTime.getTime()))
-  const [date, setDate] = useState<Date | undefined>(workingDate)
-  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [workingDate, setWorkingDate] = useState<Date>(new Date(dateTime.getTime()));
+  const [date, setDate] = useState<Date | undefined>(workingDate);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [time, setTime] = useState(() => {
     try {
-      return format(workingDate, "HH:mm")
+      return format(workingDate, "HH:mm");
     } catch (error) {
-      console.error("Error formatting time:", error)
-      return "00:00"
+      console.error("Error formatting time:", error);
+      return "00:00";
     }
-  })
-  const [dateTimeChanged, setDateTimeChanged] = useState(false)
+  });
+  const [dateTimeChanged, setDateTimeChanged] = useState(false);
 
   // Check if there are changes to save
   const hasLocationChanges = useMemo(() => {
-    const lat = Number.parseFloat(manualLocation.latitude)
-    const lng = Number.parseFloat(manualLocation.longitude)
+    const lat = Number.parseFloat(manualLocation.latitude);
+    const lng = Number.parseFloat(manualLocation.longitude);
 
-    return lat !== location.latitude || lng !== location.longitude || manualLocation.name !== location.name
-  }, [manualLocation, location])
+    return lat !== location.latitude || lng !== location.longitude || manualLocation.name !== location.name;
+  }, [manualLocation, location]);
 
   const hasDateTimeChanges = useMemo(() => {
-    return workingDate.getTime() !== dateTime.getTime()
-  }, [workingDate, dateTime])
+    return workingDate.getTime() !== dateTime.getTime();
+  }, [workingDate, dateTime]);
 
   const hasChanges = useMemo(() => {
-    return locationChanged || dateTimeChanged
-  }, [locationChanged, dateTimeChanged])
+    return locationChanged || dateTimeChanged;
+  }, [locationChanged, dateTimeChanged]);
 
   // Store previous values when modal opens
   useEffect(() => {
     if (open) {
-      setPreviousLocation(location)
-      setPreviousDateTime(dateTime)
+      setPreviousLocation(location);
+      setPreviousDateTime(dateTime);
 
       // Reset working values to current values
       setManualLocation({
         latitude: location.latitude.toString(),
         longitude: location.longitude.toString(),
         name: location.name,
-      })
+      });
 
-      setWorkingDate(new Date(dateTime.getTime()))
-      setDate(new Date(dateTime.getTime()))
+      setWorkingDate(new Date(dateTime.getTime()));
+      setDate(new Date(dateTime.getTime()));
 
       try {
-        setTime(format(dateTime, "HH:mm"))
+        setTime(format(dateTime, "HH:mm"));
       } catch (error) {
-        console.error("Error formatting time:", error)
-        setTime("00:00")
+        console.error("Error formatting time:", error);
+        setTime("00:00");
       }
 
       // Reset change tracking
-      setLocationChanged(false)
-      setDateTimeChanged(false)
+      setLocationChanged(false);
+      setDateTimeChanged(false);
     }
-  }, [open, location, dateTime])
+  }, [open, location, dateTime]);
 
   // Update change tracking when values change
   useEffect(() => {
     if (open) {
-      setLocationChanged(hasLocationChanges)
+      setLocationChanged(hasLocationChanges);
     }
-  }, [open, hasLocationChanges])
+  }, [open, hasLocationChanges]);
 
   useEffect(() => {
     if (open) {
-      setDateTimeChanged(hasDateTimeChanges)
+      setDateTimeChanged(hasDateTimeChanges);
     }
-  }, [open, hasDateTimeChanges])
+  }, [open, hasDateTimeChanges]);
 
   // Handle search
   useEffect(() => {
     if (debouncedSearchQuery.trim().length === 0) {
-      setSearchResults([])
-      setShowPopularCities(true)
-      return
+      setSearchResults([]);
+      setShowPopularCities(true);
+      return;
     }
 
-    setIsSearching(true)
-    setShowPopularCities(false)
+    setIsSearching(true);
+    setShowPopularCities(false);
 
     // Search through popular cities
-    const results = popularCities.filter((loc) => loc.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+    const results = popularCities.filter((loc) => loc.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
 
-    setSearchResults(results)
-    setIsSearching(false)
-  }, [debouncedSearchQuery])
+    setSearchResults(results);
+    setIsSearching(false);
+  }, [debouncedSearchQuery]);
 
   const handleSelectLocation = (loc: Location) => {
     setManualLocation({
       latitude: loc.latitude.toString(),
       longitude: loc.longitude.toString(),
       name: loc.name,
-    })
-    setLocationError(null)
-    setSearchQuery("") // Clear search after selection
-    setLocationChanged(true)
-  }
+    });
+    setLocationError(null);
+    setSearchQuery(""); // Clear search after selection
+    setLocationChanged(true);
+  };
 
   const validateCoordinate = (field: "latitude" | "longitude", value: string): string | undefined => {
-    const num = Number.parseFloat(value)
+    const num = Number.parseFloat(value);
 
     if (isNaN(num)) {
-      return "Must be a valid number"
+      return "Must be a valid number";
     }
 
     if (field === "latitude") {
       if (num < -90 || num > 90) {
-        return "Latitude must be between -90 and 90"
+        return "Latitude must be between -90 and 90";
       }
     } else if (field === "longitude") {
       if (num < -180 || num > 180) {
-        return "Longitude must be between -180 and 180"
+        return "Longitude must be between -180 and 180";
       }
     }
 
-    return undefined
-  }
+    return undefined;
+  };
 
   const handleInputChange = (field: keyof typeof manualLocation, value: string) => {
     // If changing coordinates, clear the name if it was from a preset location
     if (field === "latitude" || field === "longitude") {
       // Validate the coordinate
       if (field === "latitude" || field === "longitude") {
-        const error = validateCoordinate(field as "latitude" | "longitude", value)
+        const error = validateCoordinate(field as "latitude" | "longitude", value);
 
         setLocationError((prev) => ({
           ...prev,
           [field]: error,
-        }))
+        }));
       }
 
       setManualLocation((prev) => ({
@@ -193,122 +193,122 @@ export default function SettingsModal({
         [field]: value,
         // Clear name when manually editing coordinates
         name: field === "name" ? value : "",
-      }))
+      }));
     } else {
       setManualLocation((prev) => ({
         ...prev,
         [field]: value,
-      }))
+      }));
     }
 
-    setLocationChanged(true)
-  }
+    setLocationChanged(true);
+  };
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
-      setDate(newDate)
+      setDate(newDate);
       try {
         // Create a new date object to avoid reference issues
-        const updatedDate = new Date(newDate)
+        const updatedDate = new Date(newDate);
 
         // Preserve the current time
         if (workingDate) {
-          updatedDate.setHours(workingDate.getHours(), workingDate.getMinutes(), workingDate.getSeconds())
+          updatedDate.setHours(workingDate.getHours(), workingDate.getMinutes(), workingDate.getSeconds());
         }
 
         // Update the working date
-        setWorkingDate(updatedDate)
-        setDateTimeChanged(true)
+        setWorkingDate(updatedDate);
+        setDateTimeChanged(true);
       } catch (error) {
-        console.error("Error setting time:", error)
-        setWorkingDate(newDate)
-        setDateTimeChanged(true)
+        console.error("Error setting time:", error);
+        setWorkingDate(newDate);
+        setDateTimeChanged(true);
       }
     }
-  }
+  };
 
   const handleTimeChange = (value: string) => {
     // Store the input value regardless of validity
-    setTime(value)
+    setTime(value);
 
     // Only update the working date if the time format is valid
     if (date && /^\d{2}:\d{2}$/.test(value)) {
       try {
-        const [hours, minutes] = value.split(":").map(Number)
+        const [hours, minutes] = value.split(":").map(Number);
 
         // Validate hours and minutes
         if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          return // Don't update if values are invalid
+          return; // Don't update if values are invalid
         }
 
-        const newDate = new Date(date)
-        newDate.setHours(hours, minutes)
-        setWorkingDate(newDate)
-        setDateTimeChanged(true)
+        const newDate = new Date(date);
+        newDate.setHours(hours, minutes);
+        setWorkingDate(newDate);
+        setDateTimeChanged(true);
       } catch (error) {
-        console.error("Error parsing time:", error)
+        console.error("Error parsing time:", error);
       }
     }
-  }
+  };
 
   const handleTimePreset = (presetTime: string) => {
-    handleTimeChange(presetTime)
-  }
+    handleTimeChange(presetTime);
+  };
 
   const handleNow = () => {
-    const now = new Date()
-    setDate(now)
-    setWorkingDate(now)
+    const now = new Date();
+    setDate(now);
+    setWorkingDate(now);
     try {
-      const formattedTime = format(now, "HH:mm")
-      setTime(formattedTime)
-      setDateTimeChanged(true)
+      const formattedTime = format(now, "HH:mm");
+      setTime(formattedTime);
+      setDateTimeChanged(true);
     } catch (error) {
-      console.error("Error formatting now time:", error)
-      setTime("00:00")
+      console.error("Error formatting now time:", error);
+      setTime("00:00");
     }
-  }
+  };
 
   const handleSave = () => {
-    let hasAppliedChanges = false
+    let hasAppliedChanges = false;
 
     // Apply location changes if they exist
     if (locationChanged) {
-      const lat = Number.parseFloat(manualLocation.latitude)
-      const lng = Number.parseFloat(manualLocation.longitude)
+      const lat = Number.parseFloat(manualLocation.latitude);
+      const lng = Number.parseFloat(manualLocation.longitude);
 
       // Validate coordinates
-      const latError = validateCoordinate("latitude", manualLocation.latitude)
-      const lngError = validateCoordinate("longitude", manualLocation.longitude)
+      const latError = validateCoordinate("latitude", manualLocation.latitude);
+      const lngError = validateCoordinate("longitude", manualLocation.longitude);
 
       if (latError || lngError) {
         setLocationError({
           latitude: latError,
           longitude: lngError,
-        })
-        return
+        });
+        return;
       }
 
       if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        const name = manualLocation.name.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+        const name = manualLocation.name.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
         const newLocation = {
           latitude: lat,
           longitude: lng,
           name: name,
-        }
+        };
 
         // Apply the location change
-        onLocationChange(newLocation)
-        hasAppliedChanges = true
+        onLocationChange(newLocation);
+        hasAppliedChanges = true;
       }
     }
 
     // Apply date/time changes if they exist
     if (dateTimeChanged) {
       // Apply the date/time change
-      onDateTimeChange(workingDate)
-      hasAppliedChanges = true
+      onDateTimeChange(workingDate);
+      hasAppliedChanges = true;
     }
 
     if (hasAppliedChanges) {
@@ -318,23 +318,23 @@ export default function SettingsModal({
         action: {
           label: "Undo",
           onClick: () => {
-            if (locationChanged) onLocationChange(previousLocation)
-            if (dateTimeChanged) onDateTimeChange(previousDateTime)
+            if (locationChanged) onLocationChange(previousLocation);
+            if (dateTimeChanged) onDateTimeChange(previousDateTime);
             toast("Settings reverted", {
               description: "Your previous settings have been restored.",
-            })
+            });
           },
         },
-      })
+      });
     }
 
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[80vh] sm:h-[750px]">
-        <div className="flex flex-col h-full">
+      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[95vh] sm:h-[95vh]">
+        <div className="flex flex-col">
           <div className="p-4 sm:p-6 pb-2 sm:pb-4 border-b">
             <DialogHeader>
               <DialogTitle>Sky View Settings</DialogTitle>
@@ -362,7 +362,7 @@ export default function SettingsModal({
             </div>
 
             <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="h-[500px] sm:h-[500px] px-4 sm:px-6 pb-4">
+              <div className="h-[70vh] sm:h-[65vh] px-4 sm:px-6 pb-4">
                 <div className="relative h-full">
                   <TabsContent
                     value="location"
@@ -466,7 +466,11 @@ export default function SettingsModal({
                             </Label>
                             <div className="space-y-1">
                               <div
-                                className={`bg-white border ${locationError?.latitude ? "border-red-500" : "border-gray-300 hover:border-gray-400 focus-within:border-black"} rounded-md overflow-hidden transition-colors`}
+                                className={`bg-white border ${
+                                  locationError?.latitude
+                                    ? "border-red-500"
+                                    : "border-gray-300 hover:border-gray-400 focus-within:border-black"
+                                } rounded-md overflow-hidden transition-colors`}
                               >
                                 <Input
                                   id="latitude"
@@ -494,7 +498,11 @@ export default function SettingsModal({
                             </Label>
                             <div className="space-y-1">
                               <div
-                                className={`bg-white border ${locationError?.longitude ? "border-red-500" : "border-gray-300 hover:border-gray-400 focus-within:border-black"} rounded-md overflow-hidden transition-colors`}
+                                className={`bg-white border ${
+                                  locationError?.longitude
+                                    ? "border-red-500"
+                                    : "border-gray-300 hover:border-gray-400 focus-within:border-black"
+                                } rounded-md overflow-hidden transition-colors`}
                               >
                                 <Input
                                   id="longitude"
@@ -609,6 +617,5 @@ export default function SettingsModal({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

@@ -84,32 +84,32 @@ export default function ConstellationViewer() {
           <div className="flex-1 min-h-0 flex flex-col">
             <SkyCanvas skyData={skyData} />
 
-            <div className="w-full p-3 flex flex-wrap justify-between items-center border-t border-border">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">
-                  {location.name}
-                  <span className="text-xs text-muted-foreground ml-1">
-                    ({location.latitude.toFixed(2)}, {location.longitude.toFixed(2)})
+            <div className="w-full p-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 border-t border-border">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground">
+                    {location.name}
+                    <span className="text-xs text-muted-foreground ml-1">
+                      ({location.latitude.toFixed(2)}, {location.longitude.toFixed(2)})
+                    </span>
                   </span>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-4">
+                </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-foreground">{formattedDateTime}</span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSettingsOpen(true)}
-                  className="flex items-center gap-2 border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </Button>
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSettingsOpen(true)}
+                className="flex items-center gap-2 border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </Button>
             </div>
           </div>
         </CardContent>

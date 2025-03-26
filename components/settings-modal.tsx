@@ -333,7 +333,7 @@ export default function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[95vh] sm:h-[95vh]">
+      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[95vh] sm:h-[90vh] md:h-[80vh]">
         <div className="flex flex-col">
           <div className="p-4 sm:p-6 pb-2 sm:pb-4 border-b">
             <DialogHeader>
@@ -362,7 +362,7 @@ export default function SettingsModal({
             </div>
 
             <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="h-[70vh] sm:h-[65vh] px-4 sm:px-6 pb-4">
+              <div className="h-[70vh] sm:h-[65vh] md:h-[55vh] px-4 sm:px-6 pb-4">
                 <div className="relative h-full">
                   <TabsContent
                     value="location"

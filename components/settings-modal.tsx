@@ -8,11 +8,22 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, MapPin, Search, Globe, Loader2, AlertCircle } from "lucide-react";
+import {
+  CalendarIcon,
+  Clock,
+  MapPin,
+  Search,
+  Globe,
+  Loader2,
+  AlertCircle,
+  Calendar1Icon,
+  CalendarClock,
+} from "lucide-react";
 import type { Location } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { popularCities } from "@/lib/city-data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface SettingsModalProps {
   open: boolean;
@@ -333,7 +344,7 @@ export default function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[95vh] sm:h-[90vh] md:h-[80vh]">
+      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-white text-black p-0 h-[95vh] sm:h-[90vh] md:h-[75vh] lg:h-[70vh] xl:h-[60vh]">
         <div className="flex flex-col">
           <div className="p-4 sm:p-6 pb-2 sm:pb-4 border-b">
             <DialogHeader>
@@ -362,7 +373,7 @@ export default function SettingsModal({
             </div>
 
             <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="h-[70vh] sm:h-[65vh] md:h-[55vh] px-4 sm:px-6 pb-4">
+              <div className="h-[70vh] sm:h-[65vh] md:h-[45vh] lg:h-[40vh] xl:h-[40vh] px-4 sm:px-6 pb-4">
                 <div className="relative h-full">
                   <TabsContent
                     value="location"
@@ -537,23 +548,41 @@ export default function SettingsModal({
                   >
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <CalendarIcon className="h-5 w-5 text-black" />
+                        <Calendar1Icon className="h-5 w-5 text-black" />
                         <h3 className="text-lg font-medium text-black">Select Date</h3>
                       </div>
 
-                      <div className="bg-white border border-gray-300 rounded-md p-3 overflow-x-auto">
-                        <Calendar
-                          mode="single"
-                          selected={date}
-                          onSelect={handleDateChange}
-                          className="text-black mx-auto"
-                        />
-                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal border-gray-300 hover:border-gray-400 focus:border-black"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={(newDate) => {
+                              handleDateChange(newDate);
+                              // Close popover by triggering a click on the trigger button
+                              const triggerButton = document.querySelector('[aria-expanded="true"]');
+                              if (triggerButton) {
+                                (triggerButton as HTMLButtonElement).click();
+                              }
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-black" />
+                        <CalendarClock className="h-5 w-5 text-black" />
                         <h3 className="text-lg font-medium text-black">Select Time</h3>
                       </div>
 

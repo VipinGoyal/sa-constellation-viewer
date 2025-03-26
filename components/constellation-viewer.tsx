@@ -2,16 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import SkyCanvas from "@/components/sky-canvas"
-import LocationForm from "@/components/location-form"
-import DateTimeForm from "@/components/date-time-form"
+import SettingsModal from "@/components/settings-modal"
 import { calculateCelestialPositions } from "@/lib/astronomy"
 import type { Location, CelestialData } from "@/lib/types"
-import { MapPin, Calendar, Compass, Info } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { useTheme } from "next-themes"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Toaster } from "sonner"
 
 export default function ConstellationViewer() {
   // Use client-side only state initialization to prevent hydration mismatch
@@ -25,8 +22,7 @@ export default function ConstellationViewer() {
   })
 
   const [skyData, setSkyData] = useState<CelestialData | null>(null)
-  const [activeTab, setActiveTab] = useState("view")
-  const { resolvedTheme } = useTheme()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Initialize date only on client side to prevent hydration mismatch
   useEffect(() => {
@@ -75,117 +71,59 @@ export default function ConstellationViewer() {
   // Show a loading state until client-side hydration is complete
   if (!mounted) {
     return (
-      <div className="grid gap-6">
-        <div className="h-12 bg-muted animate-pulse rounded-md"></div>
-        <div className="h-[400px] bg-muted animate-pulse rounded-md"></div>
+      <div className="grid gap-4">
+        <div className="h-12 bg-gray-100 animate-pulse rounded-md"></div>
+        <div className="h-[450px] bg-gray-100 animate-pulse rounded-md"></div>
       </div>
     )
   }
 
   return (
-    <div className="grid gap-6">
-      <Tabs defaultValue="view" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
-          <TabsTrigger value="view" className="flex items-center gap-2">
-            <Compass className="h-4 w-4" />
-            <span className="hidden sm:inline">Sky View</span>
-          </TabsTrigger>
-          <TabsTrigger value="location" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline">Location</span>
-          </TabsTrigger>
-          <TabsTrigger value="time" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Date & Time</span>
-          </TabsTrigger>
-        </TabsList>
+    <div className="grid gap-2">
+      <Card className="border border-gray-200 overflow-hidden bg-white">
+        <CardContent className="p-0">
+          <div className="flex flex-col items-center">
+            <SkyCanvas skyData={skyData} />
 
-        <TabsContent value="view" className="space-y-4">
-          <Card className="border-2 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="flex flex-col items-center">
-                <div className="w-full bg-muted p-4 flex justify-between items-center flex-wrap gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => setActiveTab("location")}
-                        >
-                          <MapPin className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{location.name}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Click to change location</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("time")}>
-                          <Calendar className="h-4 w-4 text-primary" />
-                          <span>{formattedDateTime}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Click to change date & time</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-
-                <SkyCanvas skyData={skyData} />
-
-                <div className="w-full p-4 flex flex-wrap gap-2 justify-center">
-                  {skyData?.constellations
-                    .filter((c) => c.lines.length > 0)
-                    .map((constellation) => (
-                      <Badge key={constellation.name} variant="outline" className="bg-primary/10">
-                        {constellation.name}
-                      </Badge>
-                    ))}
-                </div>
+            <div className="w-full p-2 flex flex-wrap justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-black">
+                  {location.name}
+                  <span className="text-xs text-gray-600 ml-1">
+                    ({location.latitude.toFixed(2)}, {location.longitude.toFixed(2)})
+                  </span>
+                </span>
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="text-center text-sm text-muted-foreground">
-            <div className="flex items-center justify-center gap-1">
-              <Info className="h-3 w-3" />
-              <span>Click on the location or date above to change settings</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-black">{formattedDateTime}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSettingsOpen(true)}
+                  className="flex items-center gap-2 border-gray-300 text-black hover:bg-gray-100"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </Button>
+              </div>
             </div>
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="location">
-          <Card>
-            <CardContent className="pt-6">
-              <LocationForm
-                location={location}
-                onLocationChange={handleLocationChange}
-                onComplete={() => setActiveTab("view")}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {dateTime && (
+        <SettingsModal
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          location={location}
+          dateTime={dateTime}
+          onLocationChange={handleLocationChange}
+          onDateTimeChange={handleDateTimeChange}
+        />
+      )}
 
-        <TabsContent value="time">
-          <Card>
-            <CardContent className="pt-6">
-              {dateTime && (
-                <DateTimeForm
-                  dateTime={dateTime}
-                  onDateTimeChange={handleDateTimeChange}
-                  onComplete={() => setActiveTab("view")}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Toaster position="bottom-right" />
     </div>
   )
 }

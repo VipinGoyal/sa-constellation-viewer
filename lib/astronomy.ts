@@ -90,73 +90,129 @@ function generateSampleStars(date: Date, location: Location): Star[] {
 }
 
 function generateSampleConstellations(stars: Star[]): Constellation[] {
-  // Define some simple constellations
-  const constellationDefinitions = [
-    {
-      name: "Ursa Major",
-      starCount: 7,
-      startIndex: 0,
-    },
-    {
-      name: "Orion",
-      starCount: 7,
-      startIndex: 10,
-    },
-    {
-      name: "Cassiopeia",
-      starCount: 5,
-      startIndex: 20,
-    },
-    {
-      name: "Cygnus",
-      starCount: 5,
-      startIndex: 30,
-    },
-    {
-      name: "Lyra",
-      starCount: 4,
-      startIndex: 40,
-    },
-  ]
-
   // Filter to only include stars that are above the horizon
   const visibleStars = stars.filter((star) => star.altitude > 0)
 
-  return constellationDefinitions.map((def) => {
-    // Get a subset of stars for this constellation
-    const constellationStars = visibleStars.slice(def.startIndex, def.startIndex + def.starCount)
+  // Create more recognizable constellation patterns
+  const constellations: Constellation[] = []
 
-    // If we don't have enough stars, return an empty constellation
-    if (constellationStars.length < 3) {
-      return {
-        name: def.name,
-        lines: [],
-        center: { altitude: -10, azimuth: 0 }, // Below horizon
-      }
-    }
+  // Big Dipper / Ursa Major
+  if (visibleStars.length >= 7) {
+    const bigDipperStars = visibleStars.slice(0, 7)
 
-    // Create lines connecting the stars
-    const lines = []
-    for (let i = 0; i < constellationStars.length - 1; i++) {
-      lines.push({
-        start: constellationStars[i],
-        end: constellationStars[i + 1],
-      })
-    }
+    // Arrange stars in a more recognizable pattern for Big Dipper
+    const adjustedStars = [...bigDipperStars]
 
-    // Calculate the center point of the constellation
-    const centerAltitude = constellationStars.reduce((sum, star) => sum + star.altitude, 0) / constellationStars.length
+    // Adjust positions to form a clearer dipper shape
+    adjustedStars[0].azimuth = adjustedStars[0].azimuth - 5
+    adjustedStars[1].azimuth = adjustedStars[1].azimuth - 2
+    adjustedStars[2].azimuth = adjustedStars[2].azimuth + 2
+    adjustedStars[3].azimuth = adjustedStars[3].azimuth + 5
+    adjustedStars[4].altitude = adjustedStars[4].altitude - 3
+    adjustedStars[5].altitude = adjustedStars[5].altitude - 5
+    adjustedStars[6].altitude = adjustedStars[6].altitude - 7
 
-    const centerAzimuth = constellationStars.reduce((sum, star) => sum + star.azimuth, 0) / constellationStars.length
+    const lines = [
+      { start: adjustedStars[0], end: adjustedStars[1] },
+      { start: adjustedStars[1], end: adjustedStars[2] },
+      { start: adjustedStars[2], end: adjustedStars[3] },
+      { start: adjustedStars[3], end: adjustedStars[4] },
+      { start: adjustedStars[4], end: adjustedStars[5] },
+      { start: adjustedStars[5], end: adjustedStars[6] },
+    ]
 
-    return {
-      name: def.name,
+    const centerAltitude = adjustedStars.reduce((sum, star) => sum + star.altitude, 0) / adjustedStars.length
+    const centerAzimuth = adjustedStars.reduce((sum, star) => sum + star.azimuth, 0) / adjustedStars.length
+
+    constellations.push({
+      name: "Ursa Major",
       lines,
       center: {
         altitude: centerAltitude,
         azimuth: centerAzimuth,
       },
-    }
-  })
+    })
+  }
+
+  // Orion
+  if (visibleStars.length >= 14) {
+    const orionStars = visibleStars.slice(7, 14)
+
+    // Adjust positions to form a clearer Orion shape
+    orionStars[0].altitude = orionStars[0].altitude + 5 // Betelgeuse (shoulder)
+    orionStars[1].altitude = orionStars[1].altitude + 5 // Bellatrix (shoulder)
+    orionStars[2].altitude = orionStars[2].altitude + 2 // Mintaka (belt)
+    orionStars[3].altitude = orionStars[3].altitude + 2 // Alnilam (belt)
+    orionStars[4].altitude = orionStars[4].altitude + 2 // Alnitak (belt)
+    orionStars[5].altitude = orionStars[5].altitude - 3 // Saiph (leg)
+    orionStars[6].altitude = orionStars[6].altitude - 3 // Rigel (leg)
+
+    // Spread horizontally
+    orionStars[0].azimuth = orionStars[0].azimuth - 5
+    orionStars[1].azimuth = orionStars[1].azimuth + 5
+    orionStars[2].azimuth = orionStars[2].azimuth - 3
+    orionStars[4].azimuth = orionStars[4].azimuth + 3
+    orionStars[5].azimuth = orionStars[5].azimuth - 5
+    orionStars[6].azimuth = orionStars[6].azimuth + 5
+
+    const lines = [
+      { start: orionStars[0], end: orionStars[1] }, // Betelgeuse to Bellatrix
+      { start: orionStars[1], end: orionStars[2] }, // Bellatrix to Mintaka
+      { start: orionStars[2], end: orionStars[3] }, // Mintaka to Alnilam
+      { start: orionStars[3], end: orionStars[4] }, // Alnilam to Alnitak
+      { start: orionStars[4], end: orionStars[5] }, // Alnitak to Saiph
+      { start: orionStars[5], end: orionStars[6] }, // Saiph to Rigel
+      { start: orionStars[6], end: orionStars[1] }, // Rigel to Bellatrix
+      { start: orionStars[0], end: orionStars[3] }, // Betelgeuse to Alnilam
+      { start: orionStars[3], end: orionStars[5] }, // Alnilam to Saiph
+    ]
+
+    const centerAltitude = orionStars.reduce((sum, star) => sum + star.altitude, 0) / orionStars.length
+    const centerAzimuth = orionStars.reduce((sum, star) => sum + star.azimuth, 0) / orionStars.length
+
+    constellations.push({
+      name: "Orion",
+      lines,
+      center: {
+        altitude: centerAltitude,
+        azimuth: centerAzimuth,
+      },
+    })
+  }
+
+  // Cassiopeia (W shape)
+  if (visibleStars.length >= 19) {
+    const cassiopeiaStars = visibleStars.slice(14, 19)
+
+    // Adjust positions to form a clearer W shape
+    cassiopeiaStars[0].azimuth = cassiopeiaStars[0].azimuth - 8
+    cassiopeiaStars[1].azimuth = cassiopeiaStars[1].azimuth - 4
+    cassiopeiaStars[1].altitude = cassiopeiaStars[1].altitude - 3
+    cassiopeiaStars[2].altitude = cassiopeiaStars[2].altitude + 3
+    cassiopeiaStars[3].azimuth = cassiopeiaStars[3].azimuth + 4
+    cassiopeiaStars[3].altitude = cassiopeiaStars[3].altitude - 3
+    cassiopeiaStars[4].azimuth = cassiopeiaStars[4].azimuth + 8
+
+    const lines = [
+      { start: cassiopeiaStars[0], end: cassiopeiaStars[1] },
+      { start: cassiopeiaStars[1], end: cassiopeiaStars[2] },
+      { start: cassiopeiaStars[2], end: cassiopeiaStars[3] },
+      { start: cassiopeiaStars[3], end: cassiopeiaStars[4] },
+    ]
+
+    const centerAltitude = cassiopeiaStars.reduce((sum, star) => sum + star.altitude, 0) / cassiopeiaStars.length
+    const centerAzimuth = cassiopeiaStars.reduce((sum, star) => sum + star.azimuth, 0) / cassiopeiaStars.length
+
+    constellations.push({
+      name: "Cassiopeia",
+      lines,
+      center: {
+        altitude: centerAltitude,
+        azimuth: centerAzimuth,
+      },
+    })
+  }
+
+  return constellations
 }
 

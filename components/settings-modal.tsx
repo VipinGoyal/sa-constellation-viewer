@@ -322,7 +322,7 @@ export default function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-background text-foreground p-0 h-[90vh] sm:h-[90vh] md:h-[75vh] lg:h-[70vh] xl:h-[75vh] overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-background text-foreground p-0 h-[90vh] sm:h-[90vh] md:h-[85vh] lg:h-[70vh] xl:h-[75vh] overflow-hidden">
         <div className="flex flex-col h-full">
           <div className="p-4 sm:p-6 pb-2 sm:pb-4 border-b">
             <DialogHeader>

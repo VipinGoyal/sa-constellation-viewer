@@ -2,14 +2,17 @@
 
 import { useRef, useEffect, useState } from "react"
 import type { CelestialData, Star, Constellation } from "@/lib/types"
+import { useTheme } from "next-themes"
 
 interface SkyCanvasProps {
   skyData: CelestialData | null
 }
 
+// Update the SkyCanvas component to use the theme
 export default function SkyCanvas({ skyData }: SkyCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [mounted, setMounted] = useState(false)
+  const { theme } = useTheme()
 
   // Only render on client-side to prevent hydration mismatch
   useEffect(() => {
@@ -29,6 +32,15 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
     // Increase height by ~25% from the previous value
     canvas.height = Math.min(size * 0.85, 500)
 
+    // Determine colors based on theme
+    const isDarkTheme = theme === "dark"
+    const backgroundColor = isDarkTheme ? "#0f172a" : "#ffffff"
+    const backgroundGradientEnd = isDarkTheme ? "#020617" : "#f5f5f5"
+    const starColor = isDarkTheme ? "#ffffff" : "#000000"
+    const textColor = isDarkTheme ? "#ffffff" : "#000000"
+    const lineColor = isDarkTheme ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)"
+    const horizonColor = isDarkTheme ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.3)"
+
     // Create a gradient background
     const gradient = ctx.createRadialGradient(
       canvas.width / 2,
@@ -39,16 +51,16 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
       canvas.width / 2,
     )
 
-    gradient.addColorStop(0, "#ffffff")
-    gradient.addColorStop(1, "#f5f5f5")
+    gradient.addColorStop(0, backgroundColor)
+    gradient.addColorStop(1, backgroundGradientEnd)
 
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     // Add some "atmosphere" glow at the bottom
     const horizonGradient = ctx.createLinearGradient(0, canvas.height * 0.7, 0, canvas.height)
-    horizonGradient.addColorStop(0, "rgba(220, 220, 220, 0)")
-    horizonGradient.addColorStop(1, "rgba(220, 220, 220, 0.3)")
+    horizonGradient.addColorStop(0, isDarkTheme ? "rgba(30, 41, 59, 0)" : "rgba(220, 220, 220, 0)")
+    horizonGradient.addColorStop(1, isDarkTheme ? "rgba(30, 41, 59, 0.3)" : "rgba(220, 220, 220, 0.3)")
 
     ctx.fillStyle = horizonGradient
     ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3)
@@ -59,19 +71,27 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
 
     // Draw stars with enhanced visuals
     skyData.stars.forEach((star) => {
-      drawStar(ctx, star, canvas.width, canvas.height, padding)
+      drawStar(ctx, star, canvas.width, canvas.height, padding, starColor)
     })
 
     // Draw constellations
     skyData.constellations.forEach((constellation) => {
-      drawConstellation(ctx, constellation, canvas.width, canvas.height, padding)
+      drawConstellation(ctx, constellation, canvas.width, canvas.height, padding, lineColor, textColor)
     })
 
     // Draw cardinal directions and horizon
-    drawCardinalDirections(ctx, canvas.width, canvas.height, radius, padding)
-  }, [skyData, mounted])
+    drawCardinalDirections(ctx, canvas.width, canvas.height, radius, padding, textColor, horizonColor)
+  }, [skyData, mounted, theme])
 
-  const drawStar = (ctx: CanvasRenderingContext2D, star: Star, width: number, height: number, padding: number) => {
+  // Update the drawStar function to accept a color parameter
+  const drawStar = (
+    ctx: CanvasRenderingContext2D,
+    star: Star,
+    width: number,
+    height: number,
+    padding: number,
+    color: string,
+  ) => {
     // Calculate center point
     const centerX = width / 2
     const centerY = height / 2
@@ -98,13 +118,11 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, starRadius * 2)
 
       // Star color based on magnitude (brighter stars are more blue/white)
-      let starColor = "#000000"
-      if (star.magnitude > 1.5) starColor = "#000000"
-      if (star.magnitude > 3) starColor = "#000000"
+      const starColor = color
 
       gradient.addColorStop(0, starColor)
-      gradient.addColorStop(0.5, `rgba(0, 0, 0, ${0.5 * brightness})`)
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0)")
+      gradient.addColorStop(0.5, `rgba(${color === "#ffffff" ? "255, 255, 255" : "0, 0, 0"}, ${0.5 * brightness})`)
+      gradient.addColorStop(1, `rgba(${color === "#ffffff" ? "255, 255, 255" : "0, 0, 0"}, 0)`)
 
       ctx.beginPath()
       ctx.arc(x, y, starRadius, 0, Math.PI * 2)
@@ -116,8 +134,8 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
         ctx.beginPath()
         ctx.arc(x, y, starRadius * 3, 0, Math.PI * 2)
         const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, starRadius * 3)
-        glowGradient.addColorStop(0, `rgba(0, 0, 0, ${0.2 * brightness})`)
-        glowGradient.addColorStop(1, "rgba(0, 0, 0, 0)")
+        glowGradient.addColorStop(0, `rgba(${color === "#ffffff" ? "255, 255, 255" : "0, 0, 0"}, ${0.2 * brightness})`)
+        glowGradient.addColorStop(1, `rgba(${color === "#ffffff" ? "255, 255, 255" : "0, 0, 0"}, 0)`)
         ctx.fillStyle = glowGradient
         ctx.fill()
       }
@@ -125,19 +143,22 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
       // Add star name if available
       if (star.name) {
         ctx.font = "10px Arial"
-        ctx.fillStyle = "#000000"
+        ctx.fillStyle = color
         ctx.textAlign = "center"
         ctx.fillText(star.name, x, y + 12)
       }
     }
   }
 
+  // Update the drawConstellation function to accept color parameters
   const drawConstellation = (
     ctx: CanvasRenderingContext2D,
     constellation: Constellation,
     width: number,
     height: number,
     padding: number,
+    lineColor: string,
+    textColor: string,
   ) => {
     // Calculate center point
     const centerX = width / 2
@@ -147,7 +168,6 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
     const radius = Math.min(width, height) / 2 - padding
 
     // Use a more visible color for constellation lines
-    const lineColor = "#000000"
     ctx.strokeStyle = lineColor
     ctx.lineWidth = 1
 
@@ -185,24 +205,27 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
       const y = centerY - centerDistance * Math.cos(centerAzimuthRad)
 
       ctx.font = "12px Arial"
-      ctx.fillStyle = "#000000"
+      ctx.fillStyle = textColor
       ctx.textAlign = "center"
       ctx.fillText(constellation.name, x, y)
     }
   }
 
+  // Update the drawCardinalDirections function to accept color parameters
   const drawCardinalDirections = (
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
     radius: number,
     padding: number,
+    textColor: string,
+    lineColor: string,
   ) => {
     const centerX = width / 2
     const centerY = height / 2
 
     ctx.font = "12px Arial"
-    ctx.fillStyle = "#000000"
+    ctx.fillStyle = textColor
     ctx.textAlign = "center"
 
     // North
@@ -218,7 +241,7 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
     ctx.fillText("W", centerX - radius - 5, centerY)
 
     // Draw horizon line
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)"
+    ctx.strokeStyle = lineColor
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
@@ -228,13 +251,13 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
     const altitudes = [30, 60]
     altitudes.forEach((alt) => {
       const altRadius = radius * (1 - alt / 90)
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.3)"
+      ctx.strokeStyle = lineColor
       ctx.beginPath()
       ctx.arc(centerX, centerY, altRadius, 0, Math.PI * 2)
       ctx.stroke()
 
       // Label the altitude
-      ctx.fillStyle = "#000000"
+      ctx.fillStyle = textColor
       ctx.font = "10px Arial"
       ctx.fillText(`${alt}°`, centerX + altRadius, centerY)
     })
@@ -244,7 +267,7 @@ export default function SkyCanvas({ skyData }: SkyCanvasProps) {
   if (!mounted) {
     return (
       <div className="relative rounded-xl overflow-hidden transition-colors p-4">
-        <div className="w-full h-[450px] bg-gray-100 rounded-lg animate-pulse"></div>
+        <div className="w-full h-[450px] bg-muted rounded-lg animate-pulse"></div>
       </div>
     )
   }

@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { format } from "date-fns"
-import { CalendarIcon, Clock, MapPin, Search, Globe, Loader2, AlertCircle, CalendarClock } from "lucide-react"
-import type { Location } from "@/lib/types"
-import { useDebounce } from "@/hooks/use-debounce"
-import { toast } from "sonner"
-import { popularCities } from "@/lib/city-data"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { CalendarIcon, Clock, MapPin, Search, Globe, Loader2, AlertCircle, CalendarClock } from "lucide-react";
+import type { Location } from "@/lib/types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { popularCities } from "@/lib/city-data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateTimePicker } from "@/components/ui/date-picker";
 
 interface SettingsModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  location: Location
-  dateTime: Date
-  onLocationChange: (location: Location) => void
-  onDateTimeChange: (date: Date) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  location: Location;
+  dateTime: Date;
+  onLocationChange: (location: Location) => void;
+  onDateTimeChange: (date: Date) => void;
 }
 
 export default function SettingsModal({
@@ -32,310 +32,298 @@ export default function SettingsModal({
   onLocationChange,
   onDateTimeChange,
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<string>("location")
-  const [previousLocation, setPreviousLocation] = useState<Location>(location)
-  const [previousDateTime, setPreviousDateTime] = useState<Date>(dateTime)
-  const calendarRef = useRef<HTMLDivElement>(null)
-  const calendarButtonRef = useRef<HTMLButtonElement>(null)
+  const [activeTab, setActiveTab] = useState<string>("location");
+  const [previousLocation, setPreviousLocation] = useState<Location>(location);
+  const [previousDateTime, setPreviousDateTime] = useState<Date>(dateTime);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const calendarButtonRef = useRef<HTMLButtonElement>(null);
 
   // Location state
-  const [searchQuery, setSearchQuery] = useState("")
-  const debouncedSearchQuery = useDebounce(searchQuery, 300)
-  const [searchResults, setSearchResults] = useState<Location[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [searchResults, setSearchResults] = useState<Location[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [manualLocation, setManualLocation] = useState({
     latitude: location.latitude.toString(),
     longitude: location.longitude.toString(),
     name: location.name,
-  })
+  });
   const [locationError, setLocationError] = useState<{
-    latitude?: string
-    longitude?: string
-  } | null>(null)
-  const [showPopularCities, setShowPopularCities] = useState(true)
-  const [locationChanged, setLocationChanged] = useState(false)
+    latitude?: string;
+    longitude?: string;
+  } | null>(null);
+  const [showPopularCities, setShowPopularCities] = useState(true);
+  const [locationChanged, setLocationChanged] = useState(false);
 
   // Date/Time state
-  const [workingDate, setWorkingDate] = useState<Date>(new Date(dateTime.getTime()))
-  const [date, setDate] = useState<Date | undefined>(workingDate)
-  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [workingDate, setWorkingDate] = useState<Date>(new Date(dateTime.getTime()));
+  const [date, setDate] = useState<Date | undefined>(workingDate);
   const [time, setTime] = useState(() => {
     try {
-      return format(workingDate, "HH:mm")
+      return format(workingDate, "HH:mm");
     } catch (error) {
-      console.error("Error formatting time:", error)
-      return "00:00"
+      console.error("Error formatting time:", error);
+      return "00:00";
     }
-  })
-  const [dateTimeChanged, setDateTimeChanged] = useState(false)
+  });
+  const [dateTimeChanged, setDateTimeChanged] = useState(false);
 
   // Check if there are changes to save
   const hasLocationChanges = useMemo(() => {
-    const lat = Number.parseFloat(manualLocation.latitude)
-    const lng = Number.parseFloat(manualLocation.longitude)
+    const lat = Number.parseFloat(manualLocation.latitude);
+    const lng = Number.parseFloat(manualLocation.longitude);
 
-    return lat !== location.latitude || lng !== location.longitude || manualLocation.name !== location.name
-  }, [manualLocation, location])
+    return lat !== location.latitude || lng !== location.longitude || manualLocation.name !== location.name;
+  }, [manualLocation, location]);
 
   const hasDateTimeChanges = useMemo(() => {
-    return workingDate.getTime() !== dateTime.getTime()
-  }, [workingDate, dateTime])
+    return workingDate.getTime() !== dateTime.getTime();
+  }, [workingDate, dateTime]);
 
   const hasChanges = useMemo(() => {
-    return locationChanged || dateTimeChanged
-  }, [locationChanged, dateTimeChanged])
+    return locationChanged || dateTimeChanged;
+  }, [locationChanged, dateTimeChanged]);
 
   // Store previous values when modal opens
   useEffect(() => {
     if (open) {
-      setPreviousLocation(location)
-      setPreviousDateTime(dateTime)
+      setPreviousLocation(location);
+      setPreviousDateTime(dateTime);
 
       // Reset working values to current values
       setManualLocation({
         latitude: location.latitude.toString(),
         longitude: location.longitude.toString(),
         name: location.name,
-      })
+      });
 
-      setWorkingDate(new Date(dateTime.getTime()))
-      setDate(new Date(dateTime.getTime()))
+      setWorkingDate(new Date(dateTime.getTime()));
+      setDate(new Date(dateTime.getTime()));
 
       try {
-        setTime(format(dateTime, "HH:mm"))
+        setTime(format(dateTime, "HH:mm"));
       } catch (error) {
-        console.error("Error formatting time:", error)
-        setTime("00:00")
+        console.error("Error formatting time:", error);
+        setTime("00:00");
       }
 
       // Reset change tracking
-      setLocationChanged(false)
-      setDateTimeChanged(false)
+      setLocationChanged(false);
+      setDateTimeChanged(false);
     }
-  }, [open, location, dateTime])
+  }, [open, location, dateTime]);
 
   // Update change tracking when values change
   useEffect(() => {
     if (open) {
-      setLocationChanged(hasLocationChanges)
+      setLocationChanged(hasLocationChanges);
     }
-  }, [open, hasLocationChanges])
+  }, [open, hasLocationChanges]);
 
   useEffect(() => {
     if (open) {
-      setDateTimeChanged(hasDateTimeChanges)
+      setDateTimeChanged(hasDateTimeChanges);
     }
-  }, [open, hasDateTimeChanges])
+  }, [open, hasDateTimeChanges]);
 
   // Handle search
   useEffect(() => {
     if (debouncedSearchQuery.trim().length === 0) {
-      setSearchResults([])
-      setShowPopularCities(true)
-      return
+      setSearchResults([]);
+      setShowPopularCities(true);
+      return;
     }
 
-    setIsSearching(true)
-    setShowPopularCities(false)
+    setIsSearching(true);
+    setShowPopularCities(false);
 
     // Search through popular cities
-    const results = popularCities.filter((loc) => loc.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+    const results = popularCities.filter((loc) => loc.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
 
-    setSearchResults(results)
-    setIsSearching(false)
-  }, [debouncedSearchQuery])
+    setSearchResults(results);
+    setIsSearching(false);
+  }, [debouncedSearchQuery]);
 
   const handleSelectLocation = (loc: Location) => {
     setManualLocation({
       latitude: loc.latitude.toString(),
       longitude: loc.longitude.toString(),
       name: loc.name,
-    })
-    setLocationError(null)
-    setSearchQuery("") // Clear search after selection
-    setLocationChanged(true)
-  }
+    });
+    setLocationError(null);
+    setSearchQuery(""); // Clear search after selection
+    setLocationChanged(true);
+  };
 
   const validateCoordinate = (field: "latitude" | "longitude", value: string): string | undefined => {
-    const num = Number.parseFloat(value)
+    const num = Number.parseFloat(value);
 
     if (isNaN(num)) {
-      return "Must be a valid number"
+      return "Must be a valid number";
     }
 
     if (field === "latitude") {
       if (num < -90 || num > 90) {
-        return "Latitude must be between -90 and 90"
+        return "Latitude must be between -90 and 90";
       }
     } else if (field === "longitude") {
       if (num < -180 || num > 180) {
-        return "Longitude must be between -180 and 180"
+        return "Longitude must be between -180 and 180";
       }
     }
 
-    return undefined
-  }
+    return undefined;
+  };
 
   const handleInputChange = (field: keyof typeof manualLocation, value: string) => {
     // If changing coordinates, clear the name if it was from a preset location
     if (field === "latitude" || field === "longitude") {
       // Validate the coordinate
       if (field === "latitude" || field === "longitude") {
-        const error = validateCoordinate(field as "latitude" | "longitude", value)
+        const error = validateCoordinate(field as "latitude" | "longitude", value);
 
         setLocationError((prev) => ({
           ...prev,
           [field]: error,
-        }))
+        }));
       }
 
       setManualLocation((prev) => ({
         ...prev,
         [field]: value,
         // Clear name when manually editing coordinates
-        name: field === "name" ? value : "",
-      }))
+        name: field === "latitude" || field === "longitude" ? value : "",
+      }));
     } else {
       setManualLocation((prev) => ({
         ...prev,
         [field]: value,
-      }))
+      }));
     }
 
-    setLocationChanged(true)
-  }
+    setLocationChanged(true);
+  };
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
-      setDate(newDate)
+      setDate(newDate);
       try {
         // Create a new date object to avoid reference issues
-        const updatedDate = new Date(newDate)
+        const updatedDate = new Date(newDate);
 
         // Preserve the current time
         if (workingDate) {
-          updatedDate.setHours(workingDate.getHours(), workingDate.getMinutes(), workingDate.getSeconds())
+          updatedDate.setHours(workingDate.getHours(), workingDate.getMinutes(), workingDate.getSeconds());
         }
 
         // Update the working date
-        setWorkingDate(updatedDate)
-        setDateTimeChanged(true)
+        setWorkingDate(updatedDate);
+        setDateTimeChanged(true);
       } catch (error) {
-        console.error("Error setting time:", error)
-        setWorkingDate(newDate)
-        setDateTimeChanged(true)
+        console.error("Error setting time:", error);
+        setWorkingDate(newDate);
+        setDateTimeChanged(true);
       }
     }
-  }
+  };
 
   const handleTimeChange = (value: string) => {
     // Store the input value regardless of validity
-    setTime(value)
+    setTime(value);
 
     // Only update the working date if the time format is valid
     if (date && /^\d{2}:\d{2}$/.test(value)) {
       try {
-        const [hours, minutes] = value.split(":").map(Number)
+        const [hours, minutes] = value.split(":").map(Number);
 
         // Validate hours and minutes
         if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          return // Don't update if values are invalid
+          return; // Don't update if values are invalid
         }
 
-        const newDate = new Date(date)
-        newDate.setHours(hours, minutes)
-        setWorkingDate(newDate)
-        setDateTimeChanged(true)
+        const newDate = new Date(date);
+        newDate.setHours(hours, minutes);
+        setWorkingDate(newDate);
+        setDateTimeChanged(true);
       } catch (error) {
-        console.error("Error parsing time:", error)
+        console.error("Error parsing time:", error);
       }
     }
-  }
+  };
 
   const handleTimePreset = (presetTime: string) => {
-    handleTimeChange(presetTime)
-  }
+    handleTimeChange(presetTime);
+    setDateTimeChanged(true);
+  };
 
   const handleNow = () => {
-    const now = new Date()
-    setDate(now)
-    setWorkingDate(now)
+    const now = new Date();
+    setDate(now);
+    setWorkingDate(now);
+    setDateTimeChanged(true);
     try {
-      const formattedTime = format(now, "HH:mm")
-      setTime(formattedTime)
-      setDateTimeChanged(true)
+      const formattedTime = format(now, "HH:mm");
+      setTime(formattedTime);
     } catch (error) {
-      console.error("Error formatting now time:", error)
-      setTime("00:00")
+      console.error("Error formatting now time:", error);
+      setTime("00:00");
     }
-  }
+  };
+
+  const handleDateTimeChange = (newDate: Date) => {
+    setWorkingDate(newDate);
+    setDateTimeChanged(true);
+  };
 
   const handleSave = () => {
-    let hasAppliedChanges = false
+    let hasAppliedChanges = false;
 
     // Apply location changes if they exist
     if (locationChanged) {
-      const lat = Number.parseFloat(manualLocation.latitude)
-      const lng = Number.parseFloat(manualLocation.longitude)
+      const lat = Number.parseFloat(manualLocation.latitude);
+      const lng = Number.parseFloat(manualLocation.longitude);
 
       // Validate coordinates
-      const latError = validateCoordinate("latitude", manualLocation.latitude)
-      const lngError = validateCoordinate("longitude", manualLocation.longitude)
+      const latError = validateCoordinate("latitude", manualLocation.latitude);
+      const lngError = validateCoordinate("longitude", manualLocation.longitude);
 
       if (latError || lngError) {
         setLocationError({
           latitude: latError,
           longitude: lngError,
-        })
-        return
+        });
+        return;
       }
 
       if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        const name = manualLocation.name.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+        const name = manualLocation.name.trim() || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
         const newLocation = {
           latitude: lat,
           longitude: lng,
           name: name,
-        }
+        };
 
         // Apply the location change
-        onLocationChange(newLocation)
-        hasAppliedChanges = true
+        onLocationChange(newLocation);
+        hasAppliedChanges = true;
       }
     }
 
     // Apply date/time changes if they exist
     if (dateTimeChanged) {
       // Apply the date/time change
-      onDateTimeChange(workingDate)
-      hasAppliedChanges = true
+      onDateTimeChange(workingDate);
+      hasAppliedChanges = true;
     }
 
-    if (hasAppliedChanges) {
-      // Show toast for changes
-      toast("Settings updated", {
-        description: "Your settings have been updated.",
-        action: {
-          label: "Undo",
-          onClick: () => {
-            if (locationChanged) onLocationChange(previousLocation)
-            if (dateTimeChanged) onDateTimeChange(previousDateTime)
-            toast("Settings reverted", {
-              description: "Your previous settings have been restored.",
-            })
-          },
-        },
-      })
-    }
-
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-background text-foreground p-0 h-[95vh] sm:h-[90vh] md:h-[75vh] lg:h-[70vh] xl:h-[60vh]">
-        <div className="flex flex-col">
+      <DialogContent className="sm:max-w-[500px] max-w-[95%] mx-auto bg-background text-foreground p-0 h-[90vh] sm:h-[90vh] md:h-[75vh] lg:h-[70vh] xl:h-[60vh] overflow-hidden">
+        <div className="flex flex-col h-full">
           <div className="p-4 sm:p-6 pb-2 sm:pb-4 border-b">
             <DialogHeader>
               <DialogTitle>Sky View Settings</DialogTitle>
@@ -362,12 +350,12 @@ export default function SettingsModal({
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="h-[70vh] sm:h-[65vh] md:h-[45vh] lg:h-[40vh] xl:h-[40vh] px-4 sm:px-6 pb-4">
+            <div className="flex-1 overflow-hidden">
+              <div className="h-full px-4 sm:px-6 pb-4 overflow-y-auto">
                 <div className="relative h-full">
                   <TabsContent
                     value="location"
-                    className="space-y-4 mt-2 h-full overflow-y-auto absolute inset-0"
+                    className="space-y-4 mt-2 h-full"
                     forceMount={true}
                     style={{ display: activeTab === "location" ? "block" : "none" }}
                   >
@@ -532,85 +520,46 @@ export default function SettingsModal({
 
                   <TabsContent
                     value="datetime"
-                    className="space-y-4 mt-2 h-full overflow-y-auto absolute inset-0"
+                    className="space-y-4 h-full"
                     forceMount={true}
                     style={{ display: activeTab === "datetime" ? "block" : "none" }}
                   >
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <CalendarClock className="h-5 w-5 text-foreground" />
-                        <h3 className="text-lg font-medium text-foreground">Select Date</h3>
+                        <CalendarIcon className="h-5 w-5 text-foreground" />
+                        <h3 className="text-lg font-medium text-foreground">Select Date & Time</h3>
                       </div>
 
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal border-gray-300 hover:border-gray-400 focus:border-black"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(newDate) => {
-                              handleDateChange(newDate)
-                              // Close popover by triggering a click on the trigger button
-                              const triggerButton = document.querySelector('[aria-expanded="true"]')
-                              if (triggerButton) {
-                                ;(triggerButton as HTMLButtonElement).click()
-                              }
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <CalendarClock className="h-5 w-5 text-foreground" />
-                        <h3 className="text-lg font-medium text-foreground">Select Time</h3>
+                      <div className="relative z-50">
+                        <DateTimePicker value={workingDate} onChange={handleDateTimeChange} />
                       </div>
 
-                      <div className="bg-background border border-input hover:border-input/80 focus-within:border-ring rounded-md overflow-hidden transition-colors">
-                        <Input
-                          type="time"
-                          value={time}
-                          onChange={(e) => handleTimeChange(e.target.value)}
-                          className="w-full border-0 text-foreground focus:ring-0 focus:ring-offset-0"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 mt-4">
                         <Button
                           variant="outline"
                           onClick={handleNow}
-                          className="text-xs border-input text-foreground hover:bg-accent/50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                          className="text-xs sm:text-sm border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
                         >
                           Now
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => handleTimePreset("00:00")}
-                          className="text-xs border-input text-foreground hover:bg-accent/50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                          className="text-xs sm:text-sm border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
                         >
                           Midnight
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => handleTimePreset("19:30")}
-                          className="text-xs border-input text-foreground hover:bg-accent/50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                          className="text-xs sm:text-sm border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
                         >
                           Sunset
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => handleTimePreset("05:30")}
-                          className="text-xs border-input text-foreground hover:bg-accent/50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                          className="text-xs sm:text-sm border-border text-foreground hover:bg-accent/50 dark:hover:bg-accent transition-colors"
                         >
                           Sunrise
                         </Button>
@@ -621,7 +570,7 @@ export default function SettingsModal({
               </div>
             </div>
 
-            <div className="p-4 sm:p-6 pt-2 border-t mt-auto">
+            <div className="p-4 sm:p-6 pt-2 border-t mt-auto bg-background">
               <DialogFooter className="sm:justify-end">
                 <Button
                   onClick={handleSave}
@@ -636,6 +585,5 @@ export default function SettingsModal({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
